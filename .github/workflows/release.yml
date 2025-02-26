@@ -61,19 +61,6 @@ jobs:
       with:
         name: cover-agent-windows-latest
         path: dist/windows-latest
-    - name: Extract version
-      run: |
-        echo "VERSION=$(cat cover_agent/version.txt)" >> $GITHUB_ENV
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.AI_FLOWX_TOKEN }}
-      with:
-        tag_name: ${{ env.VERSION }}
-        release_name: Release ${{ env.VERSION }}
-        draft: false
-        prerelease: false
     - name: Upload Release Asset (Ubuntu)
       uses: actions/upload-release-asset@v1
       env:
