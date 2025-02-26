@@ -61,6 +61,16 @@ jobs:
       with:
         name: cover-agent-windows-latest
         path: dist/windows-latest
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.AI_FLOWX_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
     - name: Upload Release Asset (Ubuntu)
       uses: actions/upload-release-asset@v1
       env:
