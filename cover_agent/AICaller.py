@@ -14,18 +14,8 @@ from tenacity import (
     wait_fixed,
 )
 
+API_CHAT_COMPLETIONS = "/chat/completions"
 MODEL_RETRIES = 3
-
-
-def load_config(config_path="config.json"):
-    with open(config_path, "r") as f:
-        return json.load(f)
-
-
-config = load_config()
-api_url = config["api_url"]
-api_key = config["api_key"]
-model_custom = config["model_custom"]
 
 
 def conditional_retry(func):
@@ -45,17 +35,25 @@ def conditional_retry(func):
 
 class AICaller:
     def __init__(
-        self, model: str, api_base: str = "", enable_retry=True, max_tokens=16384
+        self,
+        model: str,
+        api_base: str = "",
+        api_key: str = "",
+        enable_retry=True,
+        max_tokens=16384,
     ):
         """
         Initializes an instance of the AICaller class.
 
         Parameters:
             model (str): The name of the model to be used.
-            api_base (str): The base API URL to use in case the model is set to Ollama or Hugging Face.
+            api_base (str): The base url of the API to be used.
+            api_key (str): The key of the API to be used.
         """
-        self.model = model_custom
+        self.model = model
         self.api_base = api_base
+        self.api_key = api_key
+        self.api_url = self.api_key + API_CHAT_COMPLETIONS
         self.enable_retry = enable_retry
         self.max_tokens = max_tokens
 
@@ -92,12 +90,12 @@ class AICaller:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {self.api_key}",
         }
 
         try:
             response = requests.post(
-                api_url, json=completion_params, headers=headers, stream=stream
+                self.api_url, json=completion_params, headers=headers, stream=stream
             )
             response.raise_for_status()  # Raise an error for HTTP errors
         except requests.exceptions.RequestException as e:

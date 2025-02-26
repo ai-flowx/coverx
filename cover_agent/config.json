@@ -1,5 +1,0 @@
-{
-    "api_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
-    "api_key": "key",
-    "model_custom": "model"
-}

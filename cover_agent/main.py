@@ -90,7 +90,12 @@ def parse_args():
     parser.add_argument(
         "--api-base",
         default="http://localhost:11434",
-        help="The API url to use for Ollama or Hugging Face. Default: %(default)s.",
+        help="The API url to use. Default: %(default)s.",
+    )
+    parser.add_argument(
+        "--api-key",
+        default="",
+        help="The API key to use. Default: %(default)s.",
     )
     parser.add_argument(
         "--strict-coverage",
