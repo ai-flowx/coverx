@@ -73,7 +73,7 @@ def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
         for key in keys_fix_yaml:
             if (
                 key in response_text_lines_copy[i]
-                and not "|-" in response_text_lines_copy[i]
+                and "|-" not in response_text_lines_copy[i]
             ):
                 response_text_lines_copy[i] = response_text_lines_copy[i].replace(
                     f"{key}", f"{key} |-\n        "

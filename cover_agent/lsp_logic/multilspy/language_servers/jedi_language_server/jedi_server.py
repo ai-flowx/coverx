@@ -93,7 +93,7 @@ class JediServer(LanguageServer):
             return
 
         async def check_experimental_status(params):
-            if params["quiescent"] == True:
+            if params["quiescent"]:
                 self.completions_available.set()
 
         async def window_log_message(msg):

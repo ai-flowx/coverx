@@ -113,7 +113,7 @@ class LanguageServer:
                     The command must pass appropriate flags to the binary, so that it runs in the stdio mode,
                     as opposed to HTTP, TCP modes supported by some language servers.
         """
-        if type(self) == LanguageServer:
+        if type(self) is LanguageServer:
             raise MultilspyException(
                 "LanguageServer is an abstract class and cannot be instantiated directly. Use LanguageServer.create method instead."
             )
