@@ -53,7 +53,7 @@ class AICaller:
         self.model = model
         self.api_base = api_base
         self.api_key = api_key
-        self.api_url = self.api_key + API_CHAT_COMPLETIONS
+        self.api_url = self.api_base + API_CHAT_COMPLETIONS
         self.enable_retry = enable_retry
         self.max_tokens = max_tokens
 
