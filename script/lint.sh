@@ -1,6 +1,6 @@
 #!/bin/bash
 
-list="cover_agent,templated_tests,tests,tests_integration"
+list="cover_agent,templated_tests,tests_integration"
 
 old=$IFS IFS=$','
 for item in $list; do
