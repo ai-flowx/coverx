@@ -1,0 +1,5 @@
+{
+    "api_url": "https://aiapi.zx.zte.com.cn/openai/chat/completions",
+    "api_key": "key",
+    "model_custom": "model"
+}

@@ -1,8 +1,9 @@
 import datetime
+import json
 import os
+import requests
 import time
 
-import litellm
 from functools import wraps
 from wandb.sdk.data_types.trace_tree import Trace
 from tenacity import (
@@ -14,6 +15,17 @@ from tenacity import (
 )
 
 MODEL_RETRIES = 3
+
+
+def load_config(config_path="config.json"):
+    with open(config_path, "r") as f:
+        return json.load(f)
+
+
+config = load_config()
+api_url = config["api_url"]
+api_key = config["api_key"]
+model_custom = config["model_custom"]
 
 
 def conditional_retry(func):
@@ -42,7 +54,7 @@ class AICaller:
             model (str): The name of the model to be used.
             api_base (str): The base API URL to use in case the model is set to Ollama or Hugging Face.
         """
-        self.model = model
+        self.model = model_custom
         self.api_base = api_base
         self.enable_retry = enable_retry
         self.max_tokens = max_tokens
@@ -66,81 +78,70 @@ class AICaller:
         if prompt["system"] == "":
             messages = [{"role": "user", "content": prompt["user"]}]
         else:
-            if self.model in ["o1-preview", "o1-mini"]:
-                # o1 doesn't accept a system message so we add it to the prompt
-                messages = [
-                    {
-                        "role": "user",
-                        "content": prompt["system"] + "\n" + prompt["user"],
-                    },
-                ]
-            else:
-                messages = [
-                    {"role": "system", "content": prompt["system"]},
-                    {"role": "user", "content": prompt["user"]},
-                ]
+            messages = [
+                {"role": "system", "content": prompt["system"]},
+                {"role": "user", "content": prompt["user"]},
+            ]
 
         # Default completion parameters
         completion_params = {
             "model": self.model,
             "messages": messages,
-            "stream": stream,  # Use the stream parameter passed to the method
             "temperature": 0.2,
-            "max_tokens": self.max_tokens,
         }
 
-        # Model-specific adjustments
-        if self.model in ["o1-preview", "o1-mini", "o1", "o3-mini"]:
-            stream = False  # o1 doesn't support streaming
-            completion_params["temperature"] = 1
-            completion_params["stream"] = False  # o1 doesn't support streaming
-            completion_params["max_completion_tokens"] = 2 * self.max_tokens
-            # completion_params["reasoning_effort"] = "high"
-            completion_params.pop("max_tokens", None)  # Remove 'max_tokens' if present
-
-        # API base exception for OpenAI Compatible, Ollama, and Hugging Face models
-        if (
-            "ollama" in self.model
-            or "huggingface" in self.model
-            or self.model.startswith("openai/")
-        ):
-            completion_params["api_base"] = self.api_base
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
 
         try:
-            response = litellm.completion(**completion_params)
-        except Exception as e:
+            response = requests.post(
+                api_url, json=completion_params, headers=headers, stream=stream
+            )
+            response.raise_for_status()  # Raise an error for HTTP errors
+        except requests.exceptions.RequestException as e:
             print(f"Error calling LLM model: {e}")
             raise e
 
         if stream:
             chunks = []
+            full_response = ""
             print("Streaming results from LLM model...")
             try:
-                for chunk in response:
-                    print(chunk.choices[0].delta.content or "", end="", flush=True)
-                    chunks.append(chunk)
-                    time.sleep(
-                        0.01
-                    )  # Optional: Delay to simulate more 'natural' response pacing
+                for line in response.iter_lines(decode_unicode=True):
+                    if line:
+                        chunk = line.strip()
+                        print(chunk, end="", flush=True)
+                        full_response += chunk
+                        chunks.append(chunk)
+                        time.sleep(0.01)  # Simulate natural response pacing
 
             except Exception as e:
                 print(f"Error calling LLM model during streaming: {e}")
                 if self.enable_retry:
                     raise e
-            model_response = litellm.stream_chunk_builder(chunks, messages=messages)
             print("\n")
+
             # Build the final response from the streamed chunks
-            content = model_response["choices"][0]["message"]["content"]
-            usage = model_response["usage"]
-            prompt_tokens = int(usage["prompt_tokens"])
-            completion_tokens = int(usage["completion_tokens"])
+            model_response = {
+                "model": self.model,
+                "messages": messages,
+                "response": full_response,
+                "chunks": chunks,
+            }
+            content = model_response["response"]
+            content_dict = json.loads(content)
+            content = content_dict["choices"][0]["message"]["content"]
+            print("Cleaned model response: ", content)
+            prompt_tokens = len(prompt["user"])
+            completion_tokens = len(full_response)
         else:
             # Non-streaming response is a CompletionResponse object
-            content = response.choices[0].message.content
-            print(f"Printing results from LLM model...\n{content}")
-            usage = response.usage
-            prompt_tokens = int(usage.prompt_tokens)
-            completion_tokens = int(usage.completion_tokens)
+            json_response = response.json()
+            content = json_response["choices"][0]["message"]["content"]
+            prompt_tokens = json_response["usage"]["prompt_tokens"]
+            completion_tokens = json_response["usage"]["completion_tokens"]
 
         if "WANDB_API_KEY" in os.environ:
             try:
