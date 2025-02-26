@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="coverx",
-    version="1.0.0",  # Placeholder. Will be replaced by dynamic versioning.
+    version="0.1.0",  # Placeholder. Will be replaced by dynamic versioning.
     description="Cover Agent Tool",
     author="QodoAI",
     author_email="tal.r@codium.ai",
