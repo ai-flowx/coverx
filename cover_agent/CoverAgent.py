@@ -18,11 +18,11 @@ from cover_agent.DefaultAgentCompletion import DefaultAgentCompletion
 class CoverAgent:
     """
     A class that manages the generation and validation of unit tests to achieve desired code coverage.
-    
+
     This agent coordinates between test generation and validation components, handles file management,
     and tracks the progress of coverage improvements over multiple iterations.
     """
-    
+
     def __init__(self, args, agent_completion: AgentCompletionABC = None):
         """
         Initialize the CoverAgent with configuration and set up test generation environment.
@@ -135,7 +135,7 @@ class CoverAgent:
     def _validate_paths(self):
         """
         Validate all required file paths and initialize the test database.
-        
+
         This method ensures that source files, test files, and project directories exist.
         It also sets up the SQLite database for logging test runs.
 
@@ -170,7 +170,7 @@ class CoverAgent:
     def _duplicate_test_file(self):
         """
         Create a copy of the test file at the output location if specified.
-        
+
         If no output path is provided, uses the original test file path.
         This allows for non-destructive test generation without modifying the original file.
         """
@@ -184,7 +184,7 @@ class CoverAgent:
     def init(self):
         """
         Initialize the test generation environment and perform initial analysis.
-        
+
         Sets up Weights & Biases logging if configured and performs initial test suite analysis
         to establish baseline coverage metrics.
 
@@ -208,10 +208,12 @@ class CoverAgent:
 
         return failed_test_runs, language, test_framework, coverage_report
 
-    def generate_and_validate_tests(self, failed_test_runs, language, test_framework, coverage_report):
+    def generate_and_validate_tests(
+        self, failed_test_runs, language, test_framework, coverage_report
+    ):
         """
         Generate new tests and validate their effectiveness.
-        
+
         Parameters:
             failed_test_runs (list): Previously failed test executions
             language (str): Detected programming language
@@ -228,34 +230,38 @@ class CoverAgent:
                 self.test_validator.validate_test(test)
                 for test in generated_tests_dict.get("new_tests", [])
             ]
-            
+
             # Insert results into database
             for result in test_results:
                 result["prompt"] = self.test_gen.prompt
                 self.test_db.insert_attempt(result)
-                
+
         except AttributeError as e:
-            self.logger.error(f"Failed to validate the tests within {generated_tests_dict}. Error: {e}")
+            self.logger.error(
+                f"Failed to validate the tests within {generated_tests_dict}. Error: {e}"
+            )
 
     def check_iteration_progress(self):
         """
         Evaluate current progress towards coverage goals.
-        
+
         Returns:
             tuple: Contains updated test results, language info, framework details,
                   coverage report, and boolean indicating if target is reached.
         """
         failed_runs, lang, framework, report = self.test_validator.get_coverage()
-        target_reached = self.test_validator.current_coverage >= (self.test_validator.desired_coverage / 100)
+        target_reached = self.test_validator.current_coverage >= (
+            self.test_validator.desired_coverage / 100
+        )
         return failed_runs, lang, framework, report, target_reached
 
     def finalize_test_generation(self, iteration_count):
         """
         Complete the test generation process and produce final reports.
-        
+
         Parameters:
             iteration_count (int): Number of iterations performed
-            
+
         Side effects:
             - Logs final coverage statistics
             - Generates report file
@@ -272,7 +278,7 @@ class CoverAgent:
         elif iteration_count == self.args.max_iterations:
             coverage_type = "diff coverage" if self.args.diff_coverage else "coverage"
             failure_message = f"Reached maximum iteration limit without achieving desired {coverage_type}. Current Coverage: {current_coverage}%"
-            
+
             if self.args.strict_coverage:
                 self.logger.error(failure_message)
                 sys.exit(2)
@@ -307,7 +313,7 @@ class CoverAgent:
     def run(self):
         """
         Execute the main test generation loop until coverage goals are met or iterations exhausted.
-        
+
         The process involves:
         1. Initializing the environment
         2. Repeatedly generating and validating tests
@@ -318,12 +324,20 @@ class CoverAgent:
         failed_test_runs, language, test_framework, coverage_report = self.init()
 
         while iteration_count < self.args.max_iterations:
-            self.generate_and_validate_tests(failed_test_runs, language, test_framework, coverage_report)
-            
-            failed_test_runs, language, test_framework, coverage_report, target_reached = self.check_iteration_progress()
+            self.generate_and_validate_tests(
+                failed_test_runs, language, test_framework, coverage_report
+            )
+
+            (
+                failed_test_runs,
+                language,
+                test_framework,
+                coverage_report,
+                target_reached,
+            ) = self.check_iteration_progress()
             if target_reached:
                 break
-                
+
             iteration_count += 1
 
         self.finalize_test_generation(iteration_count)
