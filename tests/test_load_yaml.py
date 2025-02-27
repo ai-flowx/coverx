@@ -220,6 +220,7 @@ test_name:"""
         assert args.additional_instructions == ""
         assert args.model == "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
         assert args.api_base == "http://localhost:11434"
+        assert args.api_key == ""
         assert args.strict_coverage is False
         assert args.run_tests_multiple_times == 1
         assert args.use_report_coverage_feature_flag is False

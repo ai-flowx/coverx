@@ -38,7 +38,10 @@ class CoverAgent:
         else:
             # Default to using the DefaultAgentCompletion object with AICaller
             self.ai_caller = AICaller(
-                model=args.model, api_base=args.api_base, max_tokens=8192
+                model=args.model,
+                api_base=args.api_base,
+                api_key=args.api_key,
+                max_tokens=8192,
             )
             self.agent_completion = DefaultAgentCompletion(caller=self.ai_caller)
 

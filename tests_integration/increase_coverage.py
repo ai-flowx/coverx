@@ -44,6 +44,7 @@ class Args:
         self.model = "claude-3-7-sonnet-20250219"
         # self.model = "o1-mini"
         self.api_base = "http://localhost:11434"
+        self.api_key = ""
         self.prompt_only = False
         self.strict_coverage = False
         self.run_tests_multiple_times = 1

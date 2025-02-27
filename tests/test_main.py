@@ -129,6 +129,7 @@ class TestMain:
             additional_instructions="",
             model="gpt-4o",
             api_base="http://localhost:11434",
+            api_key="",
             strict_coverage=False,
             run_tests_multiple_times=1,
             use_report_coverage_feature_flag=False,
