@@ -14,4 +14,4 @@ cover-agent \
   --test-command-dir="$(pwd)" \
   --coverage-type="jacoco" \
   --desired-coverage=70 \
-  --max-iterations=1
+  --max-iterations=2
