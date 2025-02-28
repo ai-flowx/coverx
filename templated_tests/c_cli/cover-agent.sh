@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# sudo apt-get update
+# sudo apt-get install -y gcc ruby lcov
+# pip install lcov_cobertura
+# git clone https://github.com/ThrowTheSwitch/Unity.git
+
 cover-agent \
   --api-base="https://ark.cn-beijing.volces.com/api/v3" \
   --api-key="key" \
